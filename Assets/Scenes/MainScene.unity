@@ -499,6 +499,7 @@ GameObject:
   - component: {fileID: 1409805266}
   - component: {fileID: 1409805271}
   - component: {fileID: 1409805272}
+  - component: {fileID: 1409805273}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -642,6 +643,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   moveSpeed: 10
   jumpForce: 10000
+--- !u!114 &1409805273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1409805262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a55b86894701d43bf8342233884baa31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDetector
   groundCheck: {fileID: 131364168}
   groundCheckRadius: 0.2
   groundLayer:
