@@ -12,6 +12,7 @@ public class InputReader
     public float MouseY { get; private set; }
     public bool JumpPressed { get; private set; }
     public bool JumpDown { get; private set; }
+    public bool SprintPressed { get; private set; }
 
     /// <summary>
     /// Reads all input from Unity's Input system.
@@ -25,6 +26,7 @@ public class InputReader
         MouseY = Input.GetAxis("Mouse Y");
         JumpPressed = Input.GetKey(KeyCode.Space);
         JumpDown = Input.GetKeyDown(KeyCode.Space);
+        SprintPressed = Input.GetKey(KeyCode.LeftShift);
     }
 
     /// <summary>

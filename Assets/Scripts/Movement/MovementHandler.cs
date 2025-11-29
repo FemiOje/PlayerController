@@ -31,7 +31,8 @@ public class MovementHandler
     /// </summary>
     /// <param name="horizontal">Horizontal input (-1 to 1).</param>
     /// <param name="vertical">Vertical input (-1 to 1).</param>
-    public void Move(float horizontal, float vertical)
+    /// <param name="sprintMultiplier">Speed multiplier when sprinting (1.0 = normal speed).</param>
+    public void Move(float horizontal, float vertical, float sprintMultiplier = 1.0f)
     {
         if (cameraTransform == null)
         {
@@ -54,7 +55,9 @@ public class MovementHandler
         // Calculate move direction relative to camera orientation
         Vector3 moveDirection = (cameraForward * vertical + cameraRight * horizontal).normalized;
 
-        Vector3 targetVelocity = moveDirection * moveSpeed * Time.fixedDeltaTime;
+        // Apply sprint multiplier to movement speed
+        float currentSpeed = moveSpeed * sprintMultiplier;
+        Vector3 targetVelocity = moveDirection * currentSpeed * Time.fixedDeltaTime;
 
         rigidbody.AddForce(targetVelocity, ForceMode.VelocityChange);
     }

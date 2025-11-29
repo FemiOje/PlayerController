@@ -11,6 +11,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Tooltip("Movement speed in units per second")]
     private float moveSpeed = 10.0f;
 
+    [SerializeField] [Tooltip("Speed multiplier when sprinting (e.g., 1.5 = 50% faster)")]
+    private float sprintMultiplier = 1.5f;
+
     [Header("Jump")]
     [SerializeField] [Tooltip("Force applied upward when jumping")]
     private float jumpForce = 20.0f;
@@ -85,13 +88,16 @@ public class PlayerController : MonoBehaviour
         Debug.Log($"[INPUT] Move: ({moveInput.x:F2}, {moveInput.y:F2}) | " +
                   $"Look: ({lookInput.x:F2}, {lookInput.y:F2}) | " +
                   $"Jump Pressed: {inputReader.JumpPressed} | Jump Down: {inputReader.JumpDown} | " +
-                  $"Grounded: {isGrounded}");
+                  $"Sprint: {inputReader.SprintPressed} | Grounded: {isGrounded}");
     }
 
     private void FixedUpdate()
     {
-        // Apply movement based on input
-        movementHandler.Move(inputReader.Horizontal, inputReader.Vertical);
+        // Calculate sprint multiplier based on input
+        float currentSprintMultiplier = inputReader.SprintPressed ? sprintMultiplier : 1.0f;
+
+        // Apply movement based on input with sprint multiplier
+        movementHandler.Move(inputReader.Horizontal, inputReader.Vertical, currentSprintMultiplier);
 
         // Apply jump if triggered
         jumpHandler.ApplyJump();
