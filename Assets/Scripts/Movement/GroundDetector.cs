@@ -27,7 +27,8 @@ public class GroundDetector : MonoBehaviour
             Debug.LogError("Ground check transform is not assigned! Please assign a Transform in the Inspector.");
             return false;
         }
-        return Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
+        // return Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundLayer);
+        return Physics.CheckSphere(groundCheck.position, groundCheckRadius);
     }
 
     /// <summary>

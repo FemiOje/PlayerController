@@ -15,6 +15,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Tooltip("Force applied upward when jumping")]
     private float jumpForce = 20.0f;
 
+    [Header("Camera")]
+    [SerializeField] [Tooltip("Camera transform for camera-relative movement. If not assigned, will find Main Camera.")]
+    private Transform cameraTransform;
+
     // Component references
     private Rigidbody rb;
     private GroundDetector groundDetector;
@@ -27,15 +31,41 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         // Get required components
+
         rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            Debug.LogError("Rigidbody component not found on this GameObject! Player movement will not work correctly.");
+            return;
+        }
+        
         groundDetector = GetComponent<GroundDetector>();
+        if (groundDetector == null)
+        {
+            Debug.LogError("GroundDetector component not found on this GameObject! Player movement will not work correctly.");
+            return;
+        }
+
+        // Find camera if not assigned
+        if (cameraTransform == null)
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                cameraTransform = mainCamera.transform;
+            }
+            else
+            {
+                Debug.LogWarning("No camera assigned and Camera.main not found! Movement will not work correctly. Please assign a camera in the Inspector.");
+            }
+        }
 
         // Configure Rigidbody
-        ConfigureRigidbody();
+        // ConfigureRigidbody();
 
         // Initialize system handlers
         inputReader = new InputReader();
-        movementHandler = new MovementHandler(rb, transform, moveSpeed);
+        movementHandler = new MovementHandler(rb, transform, cameraTransform, moveSpeed);
         jumpHandler = new JumpHandler(rb, groundDetector, inputReader, jumpForce);
     }
 
@@ -75,7 +105,7 @@ public class PlayerController : MonoBehaviour
         if (rb == null) return;
 
         // Freeze rotation to prevent player from tumbling
-        rb.freezeRotation = true;
+        // rb.freezeRotation = true;
     }
 }
 
