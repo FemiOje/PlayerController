@@ -18,6 +18,9 @@ public class PlayerController : MonoBehaviour
     [Range(0.0f, 0.3f)]
     private float rotationSmoothTime = 0.12f;
 
+    [SerializeField] [Tooltip("Rate at which animation blend transitions (for smooth speed changes)")]
+    private float speedChangeRate = 10.0f;
+
     [Header("Jump")]
     [SerializeField] [Tooltip("Force applied upward when jumping")]
     private float jumpForce = 20.0f;
@@ -25,6 +28,10 @@ public class PlayerController : MonoBehaviour
     [Header("Camera")]
     [SerializeField] [Tooltip("Camera transform for camera-relative movement. If not assigned, will find Main Camera.")]
     private Transform cameraTransform;
+
+    [Header("Animation")]
+    [SerializeField] [Tooltip("Animator component for character animations. Optional - animations will be disabled if not assigned.")]
+    private Animator animator;
 
     // Component references
     private Rigidbody rb;
@@ -35,6 +42,11 @@ public class PlayerController : MonoBehaviour
     private MovementHandler movementHandler;
     private JumpHandler jumpHandler;
     private RotationHandler rotationHandler;
+    private AnimationHandler animationHandler;
+
+    // Animation state tracking
+    private bool wasGrounded;
+    private bool jumpTriggered;
 
     private void Awake()
     {
@@ -68,6 +80,11 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
+
         // Configure Rigidbody - freeze rotation on X and Z axes to prevent physics from rotating player
         ConfigureRigidbody();
 
@@ -76,6 +93,11 @@ public class PlayerController : MonoBehaviour
         movementHandler = new MovementHandler(rb, transform, cameraTransform, moveSpeed);
         jumpHandler = new JumpHandler(rb, groundDetector, inputReader, jumpForce);
         rotationHandler = new RotationHandler(transform, cameraTransform, rotationSmoothTime);
+        animationHandler = new AnimationHandler(animator, speedChangeRate);
+
+        // Initialize animation state
+        wasGrounded = groundDetector.IsGrounded();
+        jumpTriggered = false;
     }
 
     private void Update()
@@ -84,32 +106,75 @@ public class PlayerController : MonoBehaviour
         inputReader.ReadInput();
 
         // Check if jump should be triggered
+        bool previousJumpTriggered = jumpTriggered;
         jumpHandler.CheckJumpInput();
+
+        // Detect if jump was just triggered (for animation)
+        bool isGrounded = groundDetector.IsGrounded();
+        
+        // Update grounded animation
+        animationHandler.UpdateGroundedAnimation(isGrounded);
+
+        // Reset jump and free fall animations when grounded
+        if (isGrounded)
+        {
+            animationHandler.ResetJumpAnimation();
+            animationHandler.UpdateFreeFallAnimation(false);
+            jumpTriggered = false;
+        }
+        else
+        {
+            // Update free fall animation (not grounded and falling)
+            bool isFreeFalling = rb.linearVelocity.y < 0f;
+            animationHandler.UpdateFreeFallAnimation(isFreeFalling);
+        }
+
+        // Trigger jump animation when jump is initiated
+        if (!jumpTriggered && inputReader.JumpDown && isGrounded)
+        {
+            jumpTriggered = true;
+            animationHandler.TriggerJumpAnimation();
+        }
 
         // Rotate player to face movement direction (smooth rotation in Update for responsiveness)
         rotationHandler.Rotate(inputReader.Horizontal, inputReader.Vertical);
-
-        // Log input values for debugging
-        Vector2 moveInput = inputReader.GetMoveInput();
-        Vector2 lookInput = inputReader.GetLookInput();
-        bool isGrounded = groundDetector.IsGrounded();
-
-        // Debug.Log($"[INPUT] Move: ({moveInput.x:F2}, {moveInput.y:F2}) | " +
-        //           $"Look: ({lookInput.x:F2}, {lookInput.y:F2}) | " +
-        //           $"Jump Pressed: {inputReader.JumpPressed} | Jump Down: {inputReader.JumpDown} | " +
-        //           $"Sprint: {inputReader.SprintPressed} | Grounded: {isGrounded}");
     }
 
     private void FixedUpdate()
     {
-        // Calculate sprint multiplier based on input
         float currentSprintMultiplier = inputReader.SprintPressed ? sprintMultiplier : 1.0f;
 
-        // Apply movement based on input with sprint multiplier
         movementHandler.Move(inputReader.Horizontal, inputReader.Vertical, currentSprintMultiplier);
 
         // Apply jump if triggered
         jumpHandler.ApplyJump();
+
+        // Update movement animation parameters
+        UpdateMovementAnimation();
+    }
+
+    /// <summary>
+    /// Updates movement animation parameters (Speed and MotionSpeed).
+    /// </summary>
+    private void UpdateMovementAnimation()
+    {
+        // Calculate current horizontal speed from Rigidbody velocity
+        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        float currentHorizontalSpeed = horizontalVelocity.magnitude;
+
+        // Calculate target speed based on input and sprint state
+        Vector2 moveInput = inputReader.GetMoveInput();
+        float inputMagnitude = moveInput.magnitude;
+        float targetSpeed = 0f;
+
+        if (inputMagnitude > 0.01f)
+        {
+            float currentSprintMultiplier = inputReader.SprintPressed ? sprintMultiplier : 1.0f;
+            targetSpeed = moveSpeed * currentSprintMultiplier;
+        }
+
+        // Update animation with current speed, target speed, and input magnitude
+        animationHandler.UpdateMovementAnimation(currentHorizontalSpeed, targetSpeed, inputMagnitude);
     }
 
     /// <summary>
