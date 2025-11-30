@@ -14,6 +14,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Tooltip("Speed multiplier when sprinting (e.g., 1.5 = 50% faster)")]
     private float sprintMultiplier = 1.5f;
 
+    [SerializeField] [Tooltip("Time it takes to smoothly rotate to face movement direction (in seconds). Lower values = faster rotation.")]
+    [Range(0.0f, 0.3f)]
+    private float rotationSmoothTime = 0.12f;
+
     [Header("Jump")]
     [SerializeField] [Tooltip("Force applied upward when jumping")]
     private float jumpForce = 20.0f;
@@ -30,6 +34,7 @@ public class PlayerController : MonoBehaviour
     private InputReader inputReader;
     private MovementHandler movementHandler;
     private JumpHandler jumpHandler;
+    private RotationHandler rotationHandler;
 
     private void Awake()
     {
@@ -63,13 +68,14 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Configure Rigidbody
-        // ConfigureRigidbody();
+        // Configure Rigidbody - freeze rotation on X and Z axes to prevent physics from rotating player
+        ConfigureRigidbody();
 
         // Initialize system handlers
         inputReader = new InputReader();
         movementHandler = new MovementHandler(rb, transform, cameraTransform, moveSpeed);
         jumpHandler = new JumpHandler(rb, groundDetector, inputReader, jumpForce);
+        rotationHandler = new RotationHandler(transform, cameraTransform, rotationSmoothTime);
     }
 
     private void Update()
@@ -80,15 +86,18 @@ public class PlayerController : MonoBehaviour
         // Check if jump should be triggered
         jumpHandler.CheckJumpInput();
 
+        // Rotate player to face movement direction (smooth rotation in Update for responsiveness)
+        rotationHandler.Rotate(inputReader.Horizontal, inputReader.Vertical);
+
         // Log input values for debugging
         Vector2 moveInput = inputReader.GetMoveInput();
         Vector2 lookInput = inputReader.GetLookInput();
         bool isGrounded = groundDetector.IsGrounded();
 
-        Debug.Log($"[INPUT] Move: ({moveInput.x:F2}, {moveInput.y:F2}) | " +
-                  $"Look: ({lookInput.x:F2}, {lookInput.y:F2}) | " +
-                  $"Jump Pressed: {inputReader.JumpPressed} | Jump Down: {inputReader.JumpDown} | " +
-                  $"Sprint: {inputReader.SprintPressed} | Grounded: {isGrounded}");
+        // Debug.Log($"[INPUT] Move: ({moveInput.x:F2}, {moveInput.y:F2}) | " +
+        //           $"Look: ({lookInput.x:F2}, {lookInput.y:F2}) | " +
+        //           $"Jump Pressed: {inputReader.JumpPressed} | Jump Down: {inputReader.JumpDown} | " +
+        //           $"Sprint: {inputReader.SprintPressed} | Grounded: {isGrounded}");
     }
 
     private void FixedUpdate()
@@ -111,7 +120,7 @@ public class PlayerController : MonoBehaviour
         if (rb == null) return;
 
         // Freeze rotation to prevent player from tumbling
-        // rb.freezeRotation = true;
+        rb.freezeRotation = true;
     }
 }
 
