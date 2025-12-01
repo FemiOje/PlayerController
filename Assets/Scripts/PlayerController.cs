@@ -8,11 +8,17 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] [Tooltip("Movement speed in units per second")]
-    private float moveSpeed = 10.0f;
+    [SerializeField] [Tooltip("Movement speed in units per second (walk speed). Matches StarterAssets default: 2.0")]
+    private float moveSpeed = 2.0f;
 
-    [SerializeField] [Tooltip("Speed multiplier when sprinting (e.g., 1.5 = 50% faster)")]
-    private float sprintMultiplier = 1.5f;
+    [SerializeField] [Tooltip("Speed multiplier when sprinting (e.g., 2.5 = 2.5x walk speed, resulting in ~5.0 sprint speed)")]
+    private float sprintMultiplier = 3.0f;
+
+    [SerializeField] [Tooltip("Acceleration rate when moving (higher = faster acceleration). Recommended: 50")]
+    private float acceleration = 50f;
+
+    [SerializeField] [Tooltip("Deceleration rate when stopping (higher = stops faster). Recommended: 70")]
+    private float deceleration = 70f;
 
     [SerializeField] [Tooltip("Time it takes to smoothly rotate to face movement direction (in seconds). Lower values = faster rotation.")]
     [Range(0.0f, 0.3f)]
@@ -50,8 +56,6 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
-        // Get required components
-
         rb = GetComponent<Rigidbody>();
         if (rb == null)
         {
@@ -90,7 +94,7 @@ public class PlayerController : MonoBehaviour
 
         // Initialize system handlers
         inputReader = new InputReader();
-        movementHandler = new MovementHandler(rb, transform, cameraTransform, moveSpeed);
+        movementHandler = new MovementHandler(rb, transform, cameraTransform, moveSpeed, acceleration, deceleration);
         jumpHandler = new JumpHandler(rb, groundDetector, inputReader, jumpForce);
         rotationHandler = new RotationHandler(transform, cameraTransform, rotationSmoothTime);
         animationHandler = new AnimationHandler(animator, speedChangeRate);
@@ -186,6 +190,12 @@ public class PlayerController : MonoBehaviour
 
         // Freeze rotation to prevent player from tumbling
         rb.freezeRotation = true;
+
+        // // Reduces jitter when the camera renders at a different framerate than physics.
+        // rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // // Helps with fast movement and stability.
+        // rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
     }
 }
 
