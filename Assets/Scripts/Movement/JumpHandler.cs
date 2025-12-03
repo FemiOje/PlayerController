@@ -50,7 +50,6 @@ public class JumpHandler
         {
             // Apply upward force for jump
             rigidbody.AddForce(Vector3.up * jumpForce * Time.fixedDeltaTime, ForceMode.Impulse);
-            Debug.Log($"[JUMP] Jump performed! Force: {jumpForce}, Velocity after: {rigidbody.linearVelocity}");
             shouldJump = false; // Reset flag after jump
         }
     }

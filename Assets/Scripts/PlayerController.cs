@@ -139,9 +139,6 @@ public class PlayerController : MonoBehaviour
             jumpTriggered = true;
             animationHandler.TriggerJumpAnimation();
         }
-
-        // Rotate player to face movement direction (smooth rotation in Update for responsiveness)
-        rotationHandler.Rotate(inputReader.Horizontal, inputReader.Vertical);
     }
 
     private void FixedUpdate()
@@ -152,6 +149,10 @@ public class PlayerController : MonoBehaviour
 
         // Apply jump if triggered
         jumpHandler.ApplyJump();
+
+
+        // Rotate player to face movement direction (smooth rotation in Update for responsiveness)
+        rotationHandler.Rotate(inputReader.Horizontal, inputReader.Vertical);
 
         // Update movement animation parameters
         UpdateMovementAnimation();
@@ -191,11 +192,11 @@ public class PlayerController : MonoBehaviour
         // Freeze rotation to prevent player from tumbling
         rb.freezeRotation = true;
 
-        // // Reduces jitter when the camera renders at a different framerate than physics.
-        // rb.interpolation = RigidbodyInterpolation.Interpolate;
+        // Reduces jitter when the camera renders at a different framerate than physics.
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        // // Helps with fast movement and stability.
-        // rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        // Helps with fast movement and stability.
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
     }
 }
 
